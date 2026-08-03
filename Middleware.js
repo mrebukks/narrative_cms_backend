@@ -15,7 +15,10 @@ const requireAuth = (req, res, next) => {
   try {
     // 3. Verify the token using our super-secret key!
     // If verification succeeds, it returns the decoded payload (userId, email)
-    const decodedPayload = jwt.verify(token, "My_Super_Secret_CMS_Key_2026");
+    const decodedPayload = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "My_Super_Secret_CMS_Key_2026",
+    );
 
     // 4. Attach the user's data directly to the 'req' object
     // This makes it instantly accessible inside any route that uses this middleware!
