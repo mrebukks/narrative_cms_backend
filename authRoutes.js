@@ -9,43 +9,67 @@ const { where } = require("sequelize");
 
 const jwtKey = process.env.JWT_SECRET || "My_Super_Secret_CMS_Key_2026";
 
+// code to delete Unverified users after specific time
+async function deleteExpiredUnverifiedUsers() {
+  await User.destroy({
+    where: {
+      isVerified: false,
+      tokenExpires: {
+        [Op.lt]: Date.now(), // Deletes if tokenExpires is LESS THAN current time
+      },
+    },
+  });
+}
+
 router.post("/register", async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
 
     console.log(name, email, password);
 
-    // 1. Basic validation to make sure all fields are present
+    // 1. Basic validation
     if (!name || !email || !password) {
       return res
         .status(400)
         .json({ error: "Please provide name, email, and password." });
     }
 
-    // 2. Check if the user already exists in the database
+    // 2. Check if user exists
     const existingUser = await User.findOne({ where: { email: email } });
 
-    //check if user exists and is verified.
     if (existingUser && existingUser.isVerified) {
       return res
         .status(400)
         .json({ error: "A user with this email already exists." });
     }
 
-    // Create a token
+    // Prepare token & expiration (5 minutes = 1000 * 60 * 5)
     const token = crypto.randomInt(100000, 999999).toString();
+    const tokenExpires = Date.now() + 1000 * 60 * 5;
 
-    // 3. Create the new user record!
-    // Remember: Our beforeCreate hook in User.js will catch this password and hash it automatically!
-    const newUser = await User.create({
-      name: name,
-      email: email,
-      password: password,
-      token: token,
-      tokenExpires: Date.now() + 1000 * 60 * 5,
-    });
+    // Hash password manually so both cases are identical
 
-    // Send the email to the user.
+    if (existingUser && !existingUser.isVerified) {
+      // Case B: Update existing unverified record
+      existingUser.name = name;
+      existingUser.password = password;
+      existingUser.token = token;
+      existingUser.tokenExpires = tokenExpires;
+
+      await existingUser.save(); // FIXED: changed 'user' to 'existingUser'
+    } else {
+      // Case C: Create new user
+      await User.create({
+        // FIXED: removed undeclared 'user ='
+        name: name,
+        email: email,
+        password: password, // FIXED: pass hashedPassword here too
+        token: token,
+        tokenExpires: tokenExpires,
+      });
+    }
+
+    // Send email
     await brevo.transactionalEmails.sendTransacEmail({
       sender: { name: "The Narrative CMS", email: "iamugonnaobi003@gmail.com" },
       to: [{ email: email }],
@@ -62,16 +86,20 @@ router.post("/register", async (req, res, next) => {
     });
   } catch (error) {
     console.error(error);
-    // Let's handle Sequelize validation errors cleanly
-    if (error.name === "SequelizeValidationError") {
+
+    if (
+      error.name === "SequelizeValidationError" ||
+      error.name === "SequelizeUniqueConstraintError"
+    ) {
       return res.status(400).json({ error: error.errors[0].message });
     }
+
     res
       .status(500)
       .json({ error: "Something went wrong during registration." });
   }
 });
-//////////////////////// verification
+//////////////////////// verification ////////////////////////////
 router.post("/email/verification", async (req, res, next) => {
   const { email, token } = req.body;
 
@@ -88,6 +116,7 @@ router.post("/email/verification", async (req, res, next) => {
 
     // Check if token matches and is still valid
     if (String(pendingUser.token).trim() !== String(token).trim()) {
+      // destroy the user
       await pendingUser.destroy();
       return res.status(400).json({ message: "Invalid token." });
     }

@@ -50,7 +50,7 @@ const User = sequelize.define(
   {
     hooks: {
       // this runs automatically right before a record is saved in mysql.
-      beforeCreate: async (user) => {
+      beforeSave: async (user) => {
         if (user.password) {
           // Generate a secure salt (essentially random data added to make the hash unique)
           const salt = await bcrypt.genSalt(10);
