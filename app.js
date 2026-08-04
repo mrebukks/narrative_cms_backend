@@ -16,7 +16,17 @@ const app = express();
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://127.0.0.1:5500",
+    origin: function (origin, callback) {
+      if (
+        !origin ||
+        origin.endsWith(".vercel.app") ||
+        origin.includes("localhost")
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   }),
 ); // Allows your Netlify frontend to talk to this backend
