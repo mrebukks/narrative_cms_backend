@@ -4,6 +4,7 @@ const User = require("./model/user");
 const upload = require("./config/uploads"); // mutler file.
 const jwt = require("./Middleware");
 const allowedRoles = require("./allowedRoles");
+const path = require("path");
 
 const router = express.Router();
 
@@ -17,8 +18,9 @@ router.post("/post", jwt, upload.single("image"), async (req, res, next) => {
     // Receive the data from the client or client input
     const { title, content } = req.body;
 
-    // Check if a file was actually uploaded. If yes, save its unique path. If no, leave it blank.
-    const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+    // Check if a file was actually uploaded.
+    // Cloudinary provides the full secure URL directly in req.file.path
+    const imagePath = req.file ? req.file.path : null;
 
     // grab the authenticated user
     const authorId = req.user.userId;
@@ -115,7 +117,8 @@ router.put("/post/:id", jwt, upload.single("image"), async (req, res, next) => {
     // get the contents you would like to update from the client.
     const { title, content } = req.body;
 
-    const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+    // Cloudinary provides the full secure URL directly in req.file.path
+    const imagePath = req.file ? req.file.path : null;
 
     // find the particular post to update
     const postToUpdate = await Post.findByPk(id);
