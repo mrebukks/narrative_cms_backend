@@ -50,7 +50,7 @@ async function startServer() {
   try {
     // .sync() looks at our models and automatically creates the tables in MySQL
     // { alter: true } updates the table safely if we make changes later
-    await sequelize.sync();
+    await sequelize.sync({ alter: true });
     console.log("🧱 The Posts table has been successfully created in MySQL!");
 
     app.listen(PORT, () => {

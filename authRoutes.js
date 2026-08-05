@@ -99,6 +99,7 @@ router.post("/register", async (req, res, next) => {
       .json({ error: "Something went wrong during registration." });
   }
 });
+
 //////////////////////// verification ////////////////////////////
 router.post("/email/verification", async (req, res, next) => {
   const { email, token } = req.body;
@@ -173,7 +174,7 @@ router.post("/login", async (req, res, next) => {
       return res.status(401).json({ error: "The password is incorrect." });
     }
 
-    if (user.isVerified === false) {
+    if (!user.isVerified) {
       return res
         .status(403)
         .json({ message: "You must verify your email before entry" });
