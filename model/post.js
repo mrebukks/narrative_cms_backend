@@ -16,10 +16,15 @@ const Post = sequelize.define("Post", {
     type: DataTypes.STRING,
     allowNull: true, // We make it true so older posts without images don't break
   },
-  
+
   author: {
     type: DataTypes.STRING,
     allowNull: true,
+  },
+
+  article: {
+    type: DataTypes.TEXT("long"),
+    allowNull: false,
   },
 });
 

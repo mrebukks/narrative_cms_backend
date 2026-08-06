@@ -16,7 +16,7 @@ router.get("/welcome", (req, res, next) => {
 router.post("/post", jwt, upload.single("image"), async (req, res, next) => {
   try {
     // Receive the data from the client or client input
-    const { title, content } = req.body;
+    const { title, content, article } = req.body;
 
     // Check if a file was actually uploaded.
     // Cloudinary provides the full secure URL directly in req.file.path
@@ -31,6 +31,7 @@ router.post("/post", jwt, upload.single("image"), async (req, res, next) => {
       content: content,
       image: imagePath, // Saving the file path text straight into MySQL!
       userId: authorId,
+      article: article,
     });
 
     // 3. Send back the newly created post with a 201 "Created" success status
@@ -115,7 +116,7 @@ router.put("/post/:id", jwt, upload.single("image"), async (req, res, next) => {
   try {
     const id = req.params.id;
     // get the contents you would like to update from the client.
-    const { title, content } = req.body;
+    const { title, content, article } = req.body;
 
     // Cloudinary provides the full secure URL directly in req.file.path
     const imagePath = req.file ? req.file.path : null;
@@ -139,6 +140,7 @@ router.put("/post/:id", jwt, upload.single("image"), async (req, res, next) => {
     postToUpdate.title = title || postToUpdate.title; // Keeps the old title if no new one is provided
     postToUpdate.content = content || postToUpdate.content;
     postToUpdate.image = imagePath || postToUpdate.image;
+    postToUpdate.article = article || postToUpdate.article;
 
     // 3. Save the changes back into the MySQL database
     await postToUpdate.save();
