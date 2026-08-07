@@ -47,7 +47,8 @@ app.use(myRouter);
 app.use(authRoutes);
 
 // fall back route for any url that did not exist.
-app.get("*", (req, res) => {
+//  New way (Wrap the asterisk in parentheses)
+app.get("(.*)", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
