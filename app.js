@@ -11,6 +11,7 @@ const cors = require("cors");
 const authRoutes = require("./authRoutes");
 const { User, Post } = require("./associations");
 const cookieParser = require("cookie-parser");
+const { dir } = require("console");
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use(
 ); // Allows your Netlify frontend to talk to this backend
 app.use(express.json());
 app.use(cookieParser());
+app.use(express.static(path.join(__dirname, "public")));
 
 // 🔓 Static Folder: This makes our uploads folder publicly accessible via URL
 // E.g., http://localhost:7000/uploads/image.jpg will show the picture!
@@ -43,6 +45,11 @@ app.get("/", (req, res, next) => {
 
 app.use(myRouter);
 app.use(authRoutes);
+
+// fall back route for any url that did not exist.
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
 const PORT = process.env.PORT || 7000;
 

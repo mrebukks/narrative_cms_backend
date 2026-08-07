@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Editorial CMS Dashboard</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Source+Serif+4:ital,wght@0,600;0,700;1,400&display=swap" />
+
+    <script src="https://cdn.jsdelivr.net/npm/tinymce@7/tinymce.min.js"></script>
+
+    <style>
+      :root {
+        /* Colors */
+        --color-primary: #004ac6;
+        --color-primary-hover: #003ea8;
+        --color-secondary: #565e74;
+        --color-on-surface: #191b23;
+        --color-background: #faf8ff;
+        --color-outline: #c3c6d7;
+        --color-outline-variant: #e1e2ed;
+        --color-error: #ba1a1a;
+
+        /* Typography */
+        --font-body: "Inter", sans-serif;
+        --font-display: "Source Serif 4", serif;
+
+        /* Spacing */
+        --spacing-sm: 8px;
+        --spacing-md: 16px;
+        --spacing-lg: 32px;
+        --spacing-xl: 48px;
+        --container-width: 640px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background-color: var(--color-background);
+        color: var(--color-on-surface);
+        font-family: var(--font-body);
+        line-height: 1.6;
+        padding: var(--spacing-xl) var(--spacing-md);
+      }
+
+      .dashboard-container {
+        max-width: var(--container-width);
+        margin: 0 auto;
+      }
+
+      /* Header & Branding */
+      .cms-header {
+        text-align: center;
+        margin-bottom: var(--spacing-xl);
+      }
+
+      .brand-logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-sm);
+      }
+
+      .brand-logo .material-symbols-outlined {
+        color: var(--color-primary);
+        font-variation-settings: "FILL" 1;
+      }
+
+      .brand-name {
+        font-family: var(--font-display);
+        font-size: 24px;
+        font-weight: 700;
+      }
+
+      .brand-subtitle {
+        font-size: 12px;
+        color: var(--color-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        font-weight: 600;
+      }
+
+      /* Form Sections */
+      .section-title {
+        font-family: var(--font-display);
+        font-size: 20px;
+        margin-bottom: var(--spacing-md);
+        font-weight: 600;
+      }
+
+      .cms-form {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .form-label {
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .form-input,
+      .form-textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid var(--color-outline);
+        border-radius: 2px;
+        font-family: var(--font-body);
+        font-size: 16px;
+        background: white;
+      }
+
+      .form-input:focus,
+      .form-textarea:focus {
+        outline: 2px solid var(--color-primary);
+        outline-offset: -1px;
+      }
+
+      .btn-submit {
+        background: var(--color-primary);
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 2px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        align-self: flex-start;
+        transition: background 0.2s ease;
+      }
+
+      .btn-submit:hover {
+        background: var(--color-primary-hover);
+      }
+
+      /* Post List */
+      .post-list-section {
+        margin-top: var(--spacing-xl);
+      }
+
+      .post-list {
+        list-style: none;
+        border-top: 1px solid var(--color-outline);
+      }
+
+      .post-item {
+        padding: var(--spacing-md) 0;
+        border-bottom: 1px solid var(--color-outline-variant);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .post-info-title {
+        display: block;
+        font-weight: 600;
+        font-size: 16px;
+      }
+
+      .post-info-meta {
+        font-size: 12px;
+        color: var(--color-secondary);
+      }
+
+      .post-actions {
+        display: flex;
+        gap: var(--spacing-md);
+      }
+
+      .post-actions a {
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 400;
+        color: var(--color-primary);
+        cursor: pointer;
+      }
+
+      .post-actions a:hover {
+        text-decoration: underline;
+      }
+
+      .post-actions a.delete {
+        color: var(--color-error);
+      }
+
+      /* Footer */
+      .cms-footer {
+        margin-top: var(--spacing-xl);
+        padding-top: var(--spacing-lg);
+        border-top: 1px solid var(--color-outline);
+        text-align: center;
+      }
+
+      .sign-out-link {
+        color: var(--color-secondary);
+        font-size: 12px;
+        text-decoration: none;
+        transition: color 0.2s ease;
+        cursor: pointer;
+      }
+
+      .sign-out-link:hover {
+        color: var(--color-primary);
+      }
+
+      /* Utility Helpers */
+      .hidden {
+        display: none !important;
+      }
+
+      .user-banner {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: white;
+        padding: var(--spacing-md);
+        border: 1px solid var(--color-outline-variant);
+        margin-bottom: var(--spacing-lg);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="dashboard-container">
+      <!-- Branding -->
+      <header class="cms-header">
+        <div class="brand-logo">
+          <span class="material-symbols-outlined">auto_stories</span>
+          <h1 class="brand-name">The Narrative</h1>
+        </div>
+        <p class="brand-subtitle">Editorial CMS</p>
+      </header>
+
+      <!-- 🔑 LOGIN SECTION (Visible when logged out) -->
+      <section id="authSection">
+        <h2 class="section-title">Editor Login</h2>
+        <form id="loginForm" class="cms-form">
+          <div class="form-group">
+            <label class="form-label" for="loginEmail">Email Address</label>
+            <input
+              class="form-input"
+              id="loginEmail"
+              type="email"
+              required
+              placeholder="editor@thenarrative.com" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="loginPassword">Password</label>
+            <input
+              class="form-input"
+              id="loginPassword"
+              type="password"
+              required
+              placeholder="••••••••" />
+          </div>
+          <button class="btn-submit" type="submit">Sign In to Dashboard</button>
+        </form>
+        <p>Not a User?</p>
+        <a href="register.html">Register Here</a>
+        <div>
+          <p>Forgotten Passwords ?</p>
+          <a href="forgotpassword.html"> click here</a>
+        </div>
+      </section>
+
+      <!-- 👤 CMS DASHBOARD CONTENT (Hidden until authenticated) -->
+      <main id="dashboardContent" class="hidden">
+        <!-- Welcome Bar -->
+        <div class="user-banner">
+          <span id="welcomeText" class="form-label">Welcome, Editor</span>
+          <a id="signOutBtn" class="sign-out-link">Sign Out</a>
+        </div>
+
+        <!-- Create / Edit Post Form -->
+        <section>
+          <h2 id="formHeading" class="section-title">Create New Post</h2>
+          <form id="cmsForm" class="cms-form">
+            <div class="form-group">
+              <label class="form-label" for="title">Title</label>
+              <input
+                class="form-input"
+                id="title"
+                name="title"
+                placeholder="Enter post title..."
+                required
+                type="text" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="image">Image</label>
+              <input class="form-input" id="image" name="image" type="file" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="content">Content</label>
+              <textarea
+                class="form-textarea"
+                id="content"
+                name="content"
+                placeholder="Write your story here..."
+                required
+                rows="6"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="content">Article</label>
+              <textarea
+                class="form-textarea"
+                id="article"
+                name="article"
+                placeholder="Let's go with that powerful article of yours..."
+                required></textarea>
+            </div>
+
+            <button id="submitBtn" class="btn-submit" type="submit">
+              Submit Post
+            </button>
+          </form>
+        </section>
+
+        <!-- Existing Posts Section -->
+        <section class="post-list-section">
+          <h2 class="section-title">Existing Posts</h2>
+          <ul id="postList" class="post-list">
+            <!-- Posts render dynamically here -->
+          </ul>
+        </section>
+
+        <footer class="cms-footer">
+          <p class="post-info-meta">
+            Editorial Management System • Protected by JWT
+          </p>
+        </footer>
+      </main>
+    </div>
+
+    <script>
+      // TinyMcE code
+      tinymce.init({
+        selector: "#article",
+        license_key: "gpl",
+        height: 400,
+        menubar: false,
+        plugins: ["lists", "link", "image", "code", "autoresize"],
+        toolbar:
+          "undo redo | bold italic | h2 h3 | bullist numlist | link image | code",
+
+        // 📱 Mobile
+        mobile: {
+          menubar: false,
+          toolbar_mode: "scrolling",
+          toolbar: "undo redo | bold italic | h2 h3 | bullist numlist | link",
+        },
+
+        // Prevents iPhone Safari auto-zoom on focus
+        content_style:
+          "body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 16px; margin: 12px; }",
+      });
+
+      // Api routes
+      const API_URL = "/posts";
+      const postURL = "/post";
+      const AUTH_URL = "/login";
+      const API_URL_Me = "/post/me";
+      const AUTH_URL_Logout = "/logout";
+
+      // State Trackers old way
+      // let authToken = localStorage.getItem("cms_jwt_token") || null;
+      // let currentEditingId = null;
+
+      // NEW WAY:
+      let userProfile =
+        JSON.parse(localStorage.getItem("cms_user_profile")) || null;
+      let currentEditingId = null;
+
+      // DOM Elements
+      const authSection = document.getElementById("authSection");
+      const dashboardContent = document.getElementById("dashboardContent");
+      const loginForm = document.getElementById("loginForm");
+      const cmsForm = document.getElementById("cmsForm");
+      const postList = document.getElementById("postList");
+      const welcomeText = document.getElementById("welcomeText");
+      const signOutBtn = document.getElementById("signOutBtn");
+      const submitBtn = document.getElementById("submitBtn");
+      const formHeading = document.getElementById("formHeading");
+
+      // 🔄 2. Toggle UI based on Login State
+      function updateAuthUI() {
+        userProfile = JSON.parse(localStorage.getItem("cms_user_profile"));
+        if (userProfile) {
+          welcomeText.textContent = `Welcome, ${userProfile.email.split("@")[0]} --- Badge: ${userProfile.role}`;
+          authSection.classList.add("hidden");
+          dashboardContent.classList.remove("hidden");
+          fetchPosts(); // Load database posts when logged in
+        } else {
+          authSection.classList.remove("hidden");
+          dashboardContent.classList.add("hidden");
+        }
+      }
+
+      // 🔑 3. Login Handler
+      loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("loginEmail").value;
+        const password = document.getElementById("loginPassword").value;
+
+        try {
+          const response = await fetch(AUTH_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ email, password }),
+          });
+
+          const data = await response.json();
+          console.log(data);
+
+          if (response.ok) {
+            // The browser has already silently accepted and locked away the cookie!
+            // We just save the harmless profile info to drive the UI layout.
+            localStorage.setItem("cms_user_profile", JSON.stringify(data.user));
+
+            updateAuthUI();
+          } else {
+            alert(`❌ Login failed: ${data.error || "Unauthorized"}`);
+          }
+        } catch (error) {
+          console.error("Login error:", error);
+          alert("❌ Unable to connect to the authentication server.");
+        }
+      });
+
+      // 🚪 4. Sign Out Handler
+      signOutBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        localStorage.removeItem("cms_user_profile");
+        updateAuthUI();
+        await fetch(AUTH_URL_Logout, {
+          method: "POST",
+          credentials: "include",
+        });
+      });
+
+      // 📬 5. Fetch and Render Posts
+      async function fetchPosts() {
+        try {
+          const response = await fetch(`${API_URL_Me}`, {
+            method: "GET",
+            credentials: "include",
+          });
+
+          console.log(response);
+
+          if (!response.ok) {
+            console.error("fetchPosts failed", response.status);
+            localStorage.removeItem("cms_user_profile");
+            updateAuthUI();
+            return;
+          }
+
+          const data = await response.json();
+          const posts = data.posts || [];
+
+          console.log("from fetchPosts", data);
+
+          postList.innerHTML = "";
+
+          if (posts.length === 0) {
+            postList.innerHTML =
+              '<li class="post-item"><span class="post-info-meta">No existing posts found in the database.</span></li>';
+            return;
+          }
+
+          posts.forEach((post) => {
+            const formattedDate = new Date(post.createdAt).toLocaleDateString(
+              "en-US",
+              {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              },
+            );
+
+            const postHTML = `
+            <li class="post-item">
+              <div class="post-info">
+                <span class="post-info-title">${post.title}</span>
+                <p class="post-info-meta">${formattedDate} • Published</p>
+              </div>
+              <div class="post-actions">
+                <a onclick="startEditing(${post.id})">Edit</a>
+                <a class="delete" onclick="deletePost(${post.id})">Delete</a>
+              </div>
+            </li>
+          `;
+            postList.insertAdjacentHTML("beforeend", postHTML);
+          });
+        } catch (error) {
+          console.error("Error fetching posts:", error);
+        }
+      }
+
+      // 📝 6. Create or Edit Post Submit Handler
+      cmsForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const titleValue = document.getElementById("title").value;
+        const contentValue = document.getElementById("content").value;
+        const articleHTML = tinymce.get("article").getContent();
+        const imageFileInput = document.getElementById("image").files[0];
+
+        const formData = new FormData();
+        formData.append("title", titleValue);
+        formData.append("content", contentValue);
+        formData.append("article", articleHTML);
+        if (imageFileInput) {
+          formData.append("image", imageFileInput);
+        }
+
+        const isEditing = currentEditingId !== null;
+        const url = isEditing ? `${postURL}/${currentEditingId}` : postURL;
+        const method = isEditing ? "PUT" : "POST";
+        console.log(url, method);
+
+        // Validate that the user actually wrote something
+        if (!articleHTML.trim()) {
+          alert("Please write something in your article before submitting!");
+          return;
+        }
+
+        try {
+          const response = await fetch(url, {
+            method: method,
+            credentials: "include",
+            body: formData,
+            mode: "cors",
+          });
+
+          if (response.ok) {
+            alert(isEditing ? "📝 Post updated!" : "🎉 Post published!");
+            cmsForm.reset();
+            tinymce.get("article").setContent("");
+            currentEditingId = null;
+            submitBtn.textContent = "Submit Post";
+            formHeading.textContent = "Create New Post";
+            fetchPosts();
+          } else {
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+              const data = await response.json();
+              alert(`❌ Action failed: ${data.error || "Unauthorized"}`);
+            } else {
+              const errorText = await response.text();
+              alert(
+                `❌ Action failed (${response.status}): ${errorText || "Server error"}`,
+              );
+            }
+          }
+        } catch (error) {
+          console.error("Submission error:", error);
+        }
+      });
+
+      // ✏️ 7. Edit Handler
+      async function startEditing(postId) {
+        // get the particular post using the postId
+        try {
+          const response = await fetch(`${postURL}/${postId}`, {
+            method: "GET",
+            credentials: "include",
+          });
+
+          if (!response.ok) {
+            console.error("Failed to load post for editing", response.status);
+            return;
+          }
+
+          const post = await response.json();
+          document.getElementById("title").value = post.title;
+          document.getElementById("content").value = post.content;
+          tinymce.get("article").setContent(post.article || "");
+
+          currentEditingId = postId;
+
+          submitBtn.textContent = "Update Post";
+          formHeading.textContent = "Edit Post";
+          cmsForm.scrollIntoView({ behavior: "smooth" });
+        } catch (error) {
+          console.error("Error loading post:", error);
+        }
+      }
+
+      // 🗑️ 8. Delete Handler
+      async function deletePost(postId) {
+        if (
+          !confirm("⚠️ Are you sure you want to delete this story permanently?")
+        )
+          return;
+
+        try {
+          const response = await fetch(`${postURL}/${postId}`, {
+            method: "DELETE",
+            credentials: "include",
+            mode: "cors",
+          });
+
+          if (response.ok) {
+            fetchPosts();
+          } else if (response.status === 403 || response.status === 401) {
+            alert("❌❌ Your Session is Expired!!!");
+          } else {
+            alert("❌ Unauthorized or server error deleting post.");
+          }
+        } catch (error) {
+          console.error("Delete error:", error);
+        }
+      }
+
+      // Initialize UI check on page load
+      updateAuthUI();
+    </script>
+  </body>
+</html>
