@@ -20,7 +20,7 @@ app.use(
     origin: function (origin, callback) {
       if (
         !origin ||
-        origin.endsWith(".vercel.app") ||
+        origin.endsWith(".railway.app") ||
         origin.includes("localhost")
       ) {
         callback(null, true);
