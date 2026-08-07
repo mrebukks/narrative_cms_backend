@@ -47,8 +47,8 @@ app.use(myRouter);
 app.use(authRoutes);
 
 // fall back route for any url that did not exist.
-//  New way (Wrap the asterisk in parentheses)
-app.get("(.*)", (req, res) => {
+// 🔑 The official Express 5 catch-all syntax
+app.get("/*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
