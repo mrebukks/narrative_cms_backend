@@ -47,8 +47,9 @@ app.use(myRouter);
 app.use(authRoutes);
 
 // fall back route for any url that did not exist.
-// 🔑 Express 5 requires a named parameter for wildcards
-app.get("/:splat*", (req, res) => {
+
+// Matches any undefined route for any HTTP method
+app.all(/(.*)/, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
