@@ -322,8 +322,7 @@
                 class="form-textarea"
                 id="article"
                 name="article"
-                placeholder="Let's go with that powerful article of yours..."
-                ></textarea>
+                placeholder="Let's go with that powerful article of yours..."></textarea>
             </div>
 
             <button id="submitBtn" class="btn-submit" type="submit">
@@ -353,17 +352,50 @@
       tinymce.init({
         selector: "#article",
         license_key: "gpl",
+        branding: false,
+        statusbar: false,
         height: 400,
         menubar: false,
         plugins: ["lists", "link", "image", "code", "autoresize"],
         toolbar:
           "undo redo | bold italic | h2 h3 | bullist numlist | link image | code",
 
+        // Enable automatic uploading as soon as a file is picked
+        automatic_uploads: true,
+
+        // Add file picker types so TinyMCE knows to prioritize local files
+        file_picker_types: "image",
+
+        images_upload_handler: async (blobInfo) => {
+          const formData = new FormData();
+          formData.append("file", blobInfo.blob(), blobInfo.filename());
+
+          const response = await fetch("/Upload-editorImage", {
+            method: "POST",
+            body: formData,
+            credentials: "include",
+          });
+
+          if (!response.ok) {
+            throw new Error(`Upload failed with status: ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          if (!data || !data.location) {
+            throw new Error("Invalid response from server");
+          }
+
+          // Returning the string directly automatically resolves the promise for TinyMCE!
+          return data.location;
+        },
+
         // 📱 Mobile
         mobile: {
           menubar: false,
           toolbar_mode: "scrolling",
-          toolbar: "undo redo | bold italic | h2 h3 | bullist numlist | link",
+          toolbar:
+            "undo redo | bold italic | h2 h3 | bullist numlist | link | link image ",
         },
 
         // Prevents iPhone Safari auto-zoom on focus
@@ -496,17 +528,17 @@
             );
 
             const postHTML = `
-            <li class="post-item">
-              <div class="post-info">
-                <span class="post-info-title">${post.title}</span>
-                <p class="post-info-meta">${formattedDate} • Published</p>
-              </div>
-              <div class="post-actions">
-                <a onclick="startEditing(${post.id})">Edit</a>
-                <a class="delete" onclick="deletePost(${post.id})">Delete</a>
-              </div>
-            </li>
-          `;
+                  <li class="post-item">
+                    <div class="post-info">
+                      <span class="post-info-title">${post.title}</span>
+                      <p class="post-info-meta">${formattedDate} • Published</p>
+                    </div>
+                    <div class="post-actions">
+                      <a onclick="startEditing(${post.id})">Edit</a>
+                      <a class="delete" onclick="deletePost(${post.id})">Delete</a>
+                    </div>
+                  </li>
+                `;
             postList.insertAdjacentHTML("beforeend", postHTML);
           });
         } catch (error) {

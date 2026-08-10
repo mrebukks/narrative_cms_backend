@@ -12,6 +12,31 @@ router.get("/welcome", (req, res, next) => {
   res.status(200).json({ name: "Ebuka" });
 });
 
+//Route for uploading image to cloudinary
+router.post(
+  "/Upload-editorImage",
+  upload.single("file"),
+  async (req, res, next) => {
+    try {
+      //...code logic goes here.
+
+      // check if there is a request file
+      if (!req.file) {
+        return res.status(400).json({ message: "no file uploaded" });
+      }
+
+      // store the file in a variable.
+      const imageUrl = req.file.path;
+
+      // TinyMCE expects a JSON object containing a property named "location".
+      return res.status(201).json({ location: imageUrl });
+      // so your response json must contain a location key with the image as value.
+    } catch (error) {
+      return res.status(500).json({ message: error });
+    }
+  },
+);
+
 // Route for adding data to the db
 router.post("/post", jwt, upload.single("image"), async (req, res, next) => {
   try {
