@@ -271,7 +271,6 @@
 
             authSection.classList.add("hidden");
             tokenSection.classList.remove("hidden");
-            window.location.href = "/index.html";
           } else {
             alert(
               data.error || "error something is wrong with the details entered",
@@ -307,6 +306,7 @@
 
           if (response.ok) {
             alert(data.message || "Registration Successful ✅");
+            window.location.href = "/index.html";
           } else {
             alert(data.message || "something went wrong ❌");
           }

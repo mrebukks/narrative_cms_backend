@@ -323,7 +323,7 @@
                 id="article"
                 name="article"
                 placeholder="Let's go with that powerful article of yours..."
-                required></textarea>
+                ></textarea>
             </div>
 
             <button id="submitBtn" class="btn-submit" type="submit">
@@ -518,10 +518,20 @@
       cmsForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
+        // 1. Force TinyMCE to sync with your form before reading
+        if (window.tinymce) {
+          tinymce.triggerSave();
+        }
+
         const titleValue = document.getElementById("title").value;
         const contentValue = document.getElementById("content").value;
         const articleHTML = tinymce.get("article").getContent();
         const imageFileInput = document.getElementById("image").files[0];
+
+        if (!articleHTML || articleHTML.trim() === "") {
+          alert("Please write your article before submitting!");
+          return;
+        }
 
         const formData = new FormData();
         formData.append("title", titleValue);
