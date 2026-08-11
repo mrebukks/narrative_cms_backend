@@ -11,6 +11,8 @@ const allowedRoles = (...roles) => {
         .status(403)
         .json({ error: "not having the permission to do this." });
     }
+
+    next();
   };
 };
 

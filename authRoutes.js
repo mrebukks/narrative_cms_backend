@@ -185,6 +185,7 @@ router.post("/login", async (req, res, next) => {
       userId: user.id,
       email: user.email,
       role: user.role,
+      name: user.name,
     };
 
     // Sign the token with our secret key and make it expire in 2 hours

@@ -410,6 +410,7 @@
       const API_URL_Me = "/post/me";
       const AUTH_URL_Logout = "/logout";
 
+      // URL Title Variable
       // State Trackers old way
       // let authToken = localStorage.getItem("cms_jwt_token") || null;
       // let currentEditingId = null;
@@ -434,7 +435,7 @@
       function updateAuthUI() {
         userProfile = JSON.parse(localStorage.getItem("cms_user_profile"));
         if (userProfile) {
-          welcomeText.textContent = `Welcome, ${userProfile.email.split("@")[0]} --- Badge: ${userProfile.role}`;
+          welcomeText.textContent = `Welcome, ${userProfile.name} --- Badge: ${userProfile.role}`;
           authSection.classList.add("hidden");
           dashboardContent.classList.remove("hidden");
           fetchPosts(); // Load database posts when logged in
@@ -494,8 +495,6 @@
             method: "GET",
             credentials: "include",
           });
-
-          console.log(response);
 
           if (!response.ok) {
             console.error("fetchPosts failed", response.status);
@@ -657,13 +656,14 @@
           const response = await fetch(`${postURL}/${postId}`, {
             method: "DELETE",
             credentials: "include",
-            mode: "cors",
           });
+
+          const data = await response.json();
 
           if (response.ok) {
             fetchPosts();
           } else if (response.status === 403 || response.status === 401) {
-            alert("❌❌ Your Session is Expired!!!");
+            alert(data.error);
           } else {
             alert("❌ Unauthorized or server error deleting post.");
           }

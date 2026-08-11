@@ -120,7 +120,7 @@ router.get("/post/me", jwt, async (req, res, next) => {
 });
 
 // Get one single post
-router.get("/post/:id", async (req, res, next) => {
+router.get(["/post/:id", "/post/:id/:slug"], async (req, res, next) => {
   const id = req.params.id;
   try {
     const singlePost = await Post.findByPk(id);
@@ -183,12 +183,15 @@ router.delete("/post/:id", jwt, async (req, res, next) => {
     // find the particular post to delete.
     const postToDel = await Post.findByPk(id);
     if (!postToDel) {
-      res.status(400).json({ error: "There was no post to delete" });
+      return res.status(404).json({ error: "There was no post to delete" });
     }
 
-    const admin = ["admin"].includes(req.user.roles);
+    const userRoles = req.user.roles || [];
+    const isAdmin = Array.isArray(userRoles)
+      ? userRoles.includes("admin")
+      : userRoles === "admin";
 
-    if (postToDel.userId !== req.user.userId || !admin) {
+    if (postToDel.userId !== req.user.userId && !isAdmin) {
       return res
         .status(403)
         .json({ error: "Forbidden: You can only delete your own posts!" });
