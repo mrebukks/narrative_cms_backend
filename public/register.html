@@ -44,6 +44,140 @@
         padding: var(--spacing-xl) var(--spacing-md);
       }
 
+      .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        z-index: 2000;
+        padding: 0 16px;
+      }
+
+      .toast {
+        min-width: 300px;
+        max-width: 420px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        box-shadow:
+          0 8px 32px rgba(15, 23, 42, 0.12),
+          inset 1px 1px 0 rgba(255, 255, 255, 0.5);
+        border-left: 6px solid #1d4ed8;
+        transform: translateX(30px);
+        opacity: 0;
+        transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+        backdrop-filter: blur(16px) saturate(180%);
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
+      }
+
+      @media (max-width: 640px) {
+        .toast-container {
+          top: auto;
+          bottom: 20px;
+          right: 12px;
+          left: 12px;
+          gap: 10px;
+          padding: 0;
+        }
+
+        .toast {
+          min-width: unset;
+          max-width: unset;
+          width: 100%;
+          padding: 12px 14px;
+          border-radius: 14px;
+          gap: 10px;
+          font-size: 14px;
+        }
+
+        .toast-icon {
+          width: 26px;
+          height: 26px;
+          font-size: 14px;
+        }
+
+        .toast-content strong {
+          font-size: 10px;
+        }
+
+        .toast-content span {
+          font-size: 13px;
+        }
+
+        .toast-close {
+          font-size: 18px;
+        }
+      }
+
+      .toast.show {
+        transform: translateX(0);
+        opacity: 1;
+      }
+
+      .toast-success {
+        border-left-color: #1f9d61;
+      }
+
+      .toast-error {
+        border-left-color: #d64545;
+      }
+
+      .toast-info {
+        border-left-color: #1d4ed8;
+      }
+
+      .toast-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        color: white;
+        font-weight: 700;
+        background: linear-gradient(135deg, #1d4ed8, #2563eb);
+      }
+
+      .toast-success .toast-icon {
+        background: linear-gradient(135deg, #16a34a, #22c55e);
+      }
+
+      .toast-error .toast-icon {
+        background: linear-gradient(135deg, #dc2626, #ef4444);
+      }
+
+      .toast-content {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        flex: 1;
+      }
+
+      .toast-content strong {
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--color-secondary);
+      }
+
+      .toast-content span {
+        font-size: 14px;
+        color: var(--color-on-surface);
+      }
+
+      .toast-close {
+        border: none;
+        background: transparent;
+        color: var(--color-secondary);
+        font-size: 20px;
+        cursor: pointer;
+      }
+
       .hidden {
         display: none;
       }
@@ -156,6 +290,11 @@
     </style>
   </head>
   <body>
+    <div
+      id="toastContainer"
+      class="toast-container"
+      aria-live="polite"
+      aria-atomic="true"></div>
     <div class="dashboard-container">
       <!-- Branding -->
       <header class="cms-header">
@@ -235,6 +374,42 @@
       const tokenEmail = document.getElementById("tokenEmail");
       const tokenPassword = document.getElementById("tokenPassword");
 
+      function showToast(message, type = "info") {
+        const container = document.getElementById("toastContainer");
+        if (!container) return;
+
+        const toast = document.createElement("div");
+        const normalizedType = ["success", "error", "info"].includes(type)
+          ? type
+          : "info";
+        const labels = { success: "Success", error: "Error", info: "Notice" };
+        const icons = { success: "✓", error: "✕", info: "i" };
+
+        toast.className = `toast toast-${normalizedType}`;
+        toast.innerHTML = `
+          <div class="toast-icon">${icons[normalizedType]}</div>
+          <div class="toast-content">
+            <strong>${labels[normalizedType]}</strong>
+            <span>${message}</span>
+          </div>
+          <button class="toast-close" type="button" aria-label="Close notification">×</button>
+        `;
+
+        const closeButton = toast.querySelector(".toast-close");
+        closeButton.addEventListener("click", () => {
+          toast.classList.remove("show");
+          setTimeout(() => toast.remove(), 220);
+        });
+
+        container.appendChild(toast);
+        requestAnimationFrame(() => toast.classList.add("show"));
+
+        setTimeout(() => {
+          toast.classList.remove("show");
+          setTimeout(() => toast.remove(), 220);
+        }, 3800);
+      }
+
       const url = "/register";
       const tokenUrl = "/email/verification";
 
@@ -264,7 +439,10 @@
           console.log("data: ", data);
 
           if (response.ok) {
-            alert("Almost Registered! check your email for verification");
+            showToast(
+              "Almost registered! Check your email for verification.",
+              "success",
+            );
 
             // prevent the user from retyping their email
             tokenEmail.value = email;
@@ -272,12 +450,13 @@
             authSection.classList.add("hidden");
             tokenSection.classList.remove("hidden");
           } else {
-            alert(
-              data.error || "error something is wrong with the details entered",
+            showToast(
+              data.error || "Something is wrong with the details entered.",
+              "error",
             );
           }
         } catch (error) {
-          alert(error);
+          showToast("Something went wrong while registering.", "error");
         }
       });
 
@@ -305,10 +484,10 @@
           console.log(data);
 
           if (response.ok) {
-            alert(data.message || "Registration Successful ✅");
+            showToast(data.message || "Registration successful!", "success");
             window.location.href = "/index.html";
           } else {
-            alert(data.message || "something went wrong ❌");
+            showToast(data.message || "Something went wrong.", "error");
           }
         } catch (error) {
           console.log(error);

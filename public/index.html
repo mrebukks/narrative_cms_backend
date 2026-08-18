@@ -51,6 +51,149 @@
         padding: var(--spacing-xl) var(--spacing-md);
       }
 
+      .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        z-index: 2000;
+        padding: 0 16px;
+      }
+
+      .toast {
+        min-width: 320px;
+        max-width: 420px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        box-shadow:
+          0 8px 32px rgba(15, 23, 42, 0.12),
+          inset 1px 1px 0 rgba(255, 255, 255, 0.5);
+        border-left: 6px solid var(--color-primary);
+        transform: translateX(30px);
+        opacity: 0;
+        transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+        backdrop-filter: blur(16px) saturate(180%);
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
+      }
+
+      @media (max-width: 640px) {
+        .toast-container {
+          top: auto;
+          bottom: 20px;
+          right: 12px;
+          left: 12px;
+          gap: 10px;
+          padding: 0;
+        }
+
+        .toast {
+          min-width: unset;
+          max-width: unset;
+          width: 100%;
+          padding: 12px 14px;
+          border-radius: 14px;
+          gap: 10px;
+          font-size: 14px;
+        }
+
+        .toast-icon {
+          width: 26px;
+          height: 26px;
+          font-size: 14px;
+        }
+
+        .toast-content strong {
+          font-size: 10px;
+        }
+
+        .toast-content span {
+          font-size: 13px;
+        }
+
+        .toast-close {
+          font-size: 18px;
+        }
+      }
+
+      .toast.show {
+        transform: translateX(0);
+        opacity: 1;
+      }
+
+      .toast-success {
+        border-left-color: #1f9d61;
+      }
+
+      .toast-error {
+        border-left-color: #d64545;
+      }
+
+      .toast-info {
+        border-left-color: var(--color-primary);
+      }
+
+      .toast-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        font-size: 16px;
+        color: white;
+        background: linear-gradient(135deg, #1d4ed8, #2563eb);
+        flex-shrink: 0;
+      }
+
+      .toast-success .toast-icon {
+        background: linear-gradient(135deg, #16a34a, #22c55e);
+      }
+
+      .toast-error .toast-icon {
+        background: linear-gradient(135deg, #dc2626, #ef4444);
+      }
+
+      .toast-info .toast-icon {
+        background: linear-gradient(135deg, #1d4ed8, #2563eb);
+      }
+
+      .toast-content {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        flex: 1;
+      }
+
+      .toast-content strong {
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--color-secondary);
+      }
+
+      .toast-content span {
+        font-size: 14px;
+        line-height: 1.4;
+        color: var(--color-on-surface);
+      }
+
+      .toast-close {
+        border: none;
+        background: transparent;
+        color: var(--color-secondary);
+        font-size: 20px;
+        cursor: pointer;
+        line-height: 1;
+        padding: 0 2px;
+      }
+
       .dashboard-container {
         max-width: var(--container-width);
         margin: 0 auto;
@@ -235,6 +378,11 @@
     </style>
   </head>
   <body>
+    <div
+      id="toastContainer"
+      class="toast-container"
+      aria-live="polite"
+      aria-atomic="true"></div>
     <div class="dashboard-container">
       <!-- Branding -->
       <header class="cms-header">
@@ -403,6 +551,50 @@
           "body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 16px; margin: 12px; }",
       });
 
+      function showToast(message, type = "info") {
+        const container = document.getElementById("toastContainer");
+        if (!container) return;
+
+        const toast = document.createElement("div");
+        const normalizedType = ["success", "error", "info"].includes(type)
+          ? type
+          : "info";
+        const labels = {
+          success: "Success",
+          error: "Error",
+          info: "Notice",
+        };
+        const icons = {
+          success: "✓",
+          error: "✕",
+          info: "i",
+        };
+
+        toast.className = `toast toast-${normalizedType}`;
+        toast.innerHTML = `
+          <div class="toast-icon">${icons[normalizedType]}</div>
+          <div class="toast-content">
+            <strong>${labels[normalizedType]}</strong>
+            <span>${message}</span>
+          </div>
+          <button class="toast-close" type="button" aria-label="Close notification">×</button>
+        `;
+
+        const closeButton = toast.querySelector(".toast-close");
+        closeButton.addEventListener("click", () => {
+          toast.classList.remove("show");
+          setTimeout(() => toast.remove(), 220);
+        });
+
+        container.appendChild(toast);
+        requestAnimationFrame(() => toast.classList.add("show"));
+
+        setTimeout(() => {
+          toast.classList.remove("show");
+          setTimeout(() => toast.remove(), 220);
+        }, 3800);
+      }
+
       // Api routes
       const API_URL = "/posts";
       const postURL = "/post";
@@ -468,12 +660,13 @@
             localStorage.setItem("cms_user_profile", JSON.stringify(data.user));
 
             updateAuthUI();
+            showToast("Login successful.", "success");
           } else {
-            alert(`❌ Login failed: ${data.error || "Unauthorized"}`);
+            showToast(data.error || "Unauthorized", "error");
           }
         } catch (error) {
           console.error("Login error:", error);
-          alert("❌ Unable to connect to the authentication server.");
+          showToast("Unable to connect to the authentication server.", "error");
         }
       });
 
@@ -560,7 +753,7 @@
         const imageFileInput = document.getElementById("image").files[0];
 
         if (!articleHTML || articleHTML.trim() === "") {
-          alert("Please write your article before submitting!");
+          showToast("Please write your article before submitting!", "error");
           return;
         }
 
@@ -579,7 +772,10 @@
 
         // Validate that the user actually wrote something
         if (!articleHTML.trim()) {
-          alert("Please write something in your article before submitting!");
+          showToast(
+            "Please write something in your article before submitting!",
+            "error",
+          );
           return;
         }
 
@@ -592,7 +788,12 @@
           });
 
           if (response.ok) {
-            alert(isEditing ? "📝 Post updated!" : "🎉 Post published!");
+            showToast(
+              isEditing
+                ? "Post updated successfully."
+                : "Post published successfully.",
+              "success",
+            );
             cmsForm.reset();
             tinymce.get("article").setContent("");
             currentEditingId = null;
@@ -603,11 +804,12 @@
             const contentType = response.headers.get("content-type");
             if (contentType && contentType.includes("application/json")) {
               const data = await response.json();
-              alert(`❌ Action failed: ${data.error || "Unauthorized"}`);
+              showToast(data.error || "Unauthorized", "error");
             } else {
               const errorText = await response.text();
-              alert(
-                `❌ Action failed (${response.status}): ${errorText || "Server error"}`,
+              showToast(
+                `Action failed (${response.status}): ${errorText || "Server error"}`,
+                "error",
               );
             }
           }
@@ -647,29 +849,78 @@
 
       // 🗑️ 8. Delete Handler
       async function deletePost(postId) {
-        if (
-          !confirm("⚠️ Are you sure you want to delete this story permanently?")
-        )
-          return;
+        const confirmDelete = () => {
+          const overlay = document.createElement("div");
+          overlay.className = "toast-container";
+          overlay.style.position = "fixed";
+          overlay.style.inset = "0";
+          overlay.style.display = "grid";
+          overlay.style.placeItems = "center";
+          overlay.style.background = "rgba(15, 23, 42, 0.32)";
+          overlay.style.zIndex = "3000";
 
-        try {
-          const response = await fetch(`${postURL}/${postId}`, {
-            method: "DELETE",
-            credentials: "include",
-          });
+          const modal = document.createElement("div");
+          modal.style.width = "min(420px, calc(100vw - 32px))";
+          modal.style.background = "white";
+          modal.style.borderRadius = "18px";
+          modal.style.padding = "24px";
+          modal.style.boxShadow = "0 24px 55px rgba(15, 23, 42, 0.24)";
+          modal.style.border = "1px solid rgba(15, 23, 42, 0.08)";
 
-          const data = await response.json();
+          modal.innerHTML = `
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#dc2626,#ef4444);color:white;font-weight:700;">!</div>
+                <div style="font-size:18px;font-weight:700;color:#191b23;">Delete story?</div>
+              </div>
+              <p style="font-size:14px;color:#565e74;line-height:1.6;">This action is permanent and cannot be undone.</p>
+              <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:8px;">
+                <button type="button" class="cancel-delete" style="border:none;background:#eef2ff;color:#1f2937;padding:10px 16px;border-radius:10px;cursor:pointer;font-weight:600;">Cancel</button>
+                <button type="button" class="confirm-delete" style="border:none;background:linear-gradient(135deg,#dc2626,#ef4444);color:white;padding:10px 16px;border-radius:10px;cursor:pointer;font-weight:600;">Delete</button>
+              </div>
+            </div>
+          `;
 
-          if (response.ok) {
-            fetchPosts();
-          } else if (response.status === 403 || response.status === 401) {
-            alert(data.error);
-          } else {
-            alert("❌ Unauthorized or server error deleting post.");
-          }
-        } catch (error) {
-          console.error("Delete error:", error);
-        }
+          overlay.appendChild(modal);
+          document.body.appendChild(overlay);
+
+          modal
+            .querySelector(".cancel-delete")
+            .addEventListener("click", () => {
+              overlay.remove();
+            });
+
+          modal
+            .querySelector(".confirm-delete")
+            .addEventListener("click", async () => {
+              overlay.remove();
+              try {
+                const response = await fetch(`${postURL}/${postId}`, {
+                  method: "DELETE",
+                  credentials: "include",
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                  fetchPosts();
+                  showToast("Story deleted successfully.", "success");
+                } else if (response.status === 403 || response.status === 401) {
+                  showToast(data.error || "Unauthorized", "error");
+                } else {
+                  showToast(
+                    "Unauthorized or server error deleting post.",
+                    "error",
+                  );
+                }
+              } catch (error) {
+                console.error("Delete error:", error);
+                showToast("Could not delete this post right now.", "error");
+              }
+            });
+        };
+
+        confirmDelete();
       }
 
       // Initialize UI check on page load

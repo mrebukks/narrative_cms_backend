@@ -5,21 +5,45 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const brevo = require("./utility/brevo");
-const { where } = require("sequelize");
+const { where, Op } = require("sequelize");
 
 const jwtKey = process.env.JWT_SECRET || "My_Super_Secret_CMS_Key_2026";
 
 // code to delete Unverified users after specific time
 async function deleteExpiredUnverifiedUsers() {
-  await User.destroy({
-    where: {
-      isVerified: false,
-      tokenExpires: {
-        [Op.lt]: Date.now(), // Deletes if tokenExpires is LESS THAN current time
+  try {
+   // (defaults to 3 days)
+    const expiryMs = process.env.UNVERIFIED_EXPIRY_MS
+      ? Number(process.env.UNVERIFIED_EXPIRY_MS)
+      : 1000 * 60 * 60 * 24 * 3; // 3 days
+
+    const cutoff = Date.now() - expiryMs;
+
+    // Remove users who are still unverified AND either their token expired
+    // or they were created before the cutoff time.
+    const deleted = await User.destroy({
+      where: {
+        isVerified: false,
+        [Op.or]: [
+          { tokenExpires: { [Op.lt]: Date.now() } },
+          { createdAt: { [Op.lt]: new Date(cutoff) } },
+        ],
       },
-    },
-  });
+    });
+
+    if (deleted) {
+      console.log(`Cleanup: removed ${deleted} expired unverified user(s)`);
+    }
+
+    return deleted;
+  } catch (err) {
+    console.error("deleteExpiredUnverifiedUsers error:", err);
+    return 0;
+  }
 }
+
+// expose the cleanup on the router so app.js can schedule it
+router.startCleanup = deleteExpiredUnverifiedUsers;
 
 router.post("/register", async (req, res, next) => {
   try {
@@ -163,7 +187,6 @@ router.post("/login", async (req, res, next) => {
     // 2. Look for the user in the database
     const user = await User.findOne({ where: { email: email } });
     if (!user) {
-      // Security tip: Keep error messages slightly generic so hackers don't know if the email exists
       return res.status(401).json({ error: "Invalid email or password." });
     }
     // 3. Compare the typed password with the hashed password in MySQL
@@ -292,7 +315,7 @@ router.post("/reset-password", async (req, res, next) => {
     });
 
     if (!user) {
-      return res.status(403).json({ message: "You are forbidden" });
+      return res.status(403).json({ message: "You need to be verified" });
     }
 
     if (Date.now() > Number(user.tokenExpires)) {

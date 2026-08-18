@@ -30,13 +30,13 @@ app.use(
     },
     credentials: true,
   }),
-); // Allows your Netlify frontend to talk to this backend
+); // Allows your  frontend to talk to this backend
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 // 🔓 Static Folder: This makes our uploads folder publicly accessible via URL
-// E.g., http://localhost:7000/uploads/image.jpg will show the picture!
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/", (req, res, next) => {
@@ -64,6 +64,31 @@ async function startServer() {
 
     app.listen(PORT, () => {
       console.log("port now running on 7000");
+      // Schedule periodic cleanup of unverified users if available
+      if (authRoutes && typeof authRoutes.startCleanup === "function") {
+        // Run a cleanup immediately on startup
+        try {
+          authRoutes.startCleanup();
+        } catch (err) {
+          console.error("Initial cleanup failed:", err);
+        }
+
+        const cleanupInterval = process.env.CLEANUP_INTERVAL_MS
+          ? Number(process.env.CLEANUP_INTERVAL_MS)
+          : 1000 * 60 * 60; // default: 1 hour
+
+        setInterval(() => {
+          try {
+            authRoutes.startCleanup();
+          } catch (err) {
+            console.error("Scheduled cleanup failed:", err);
+          }
+        }, cleanupInterval);
+
+        console.log(
+          `Unverified-user cleanup scheduled every ${cleanupInterval}ms`,
+        );
+      }
     });
   } catch (error) {
     console.error("⛔ failed to sync", error);
